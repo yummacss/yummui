@@ -1,9 +1,4 @@
 import c from "picocolors";
-// The version is read, never retyped. These two had already drifted once:
-// `5d92f97` set the package to 0.0.1 "per the ship decision" and the constant
-// here stayed at 0.1.0, so `--version` printed a release that never existed.
-// tsdown inlines the value at build time, so nothing looks package.json up at
-// runtime and `files: ["dist"]` stays correct.
 import { version as VERSION } from "../package.json";
 import { add } from "./commands/add";
 import { init } from "./commands/init";
@@ -11,11 +6,6 @@ import { list } from "./commands/list";
 import { prune } from "./commands/prune";
 import { runner } from "./project";
 
-/**
- * Built per invocation rather than as a constant, so every example names the
- * package manager the reader's project actually uses. A hardcoded `npx` in a
- * pnpm project is the exact thing `runner` exists to avoid.
- */
 const help = () => {
 	const run = runner();
 	return `

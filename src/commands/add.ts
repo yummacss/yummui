@@ -41,32 +41,10 @@ function parse(argv: string[]): { names: string[]; options: Options } {
 	return { names, options };
 }
 
-/**
- * A component drops the `-base` suffix its registry id carries, because that
- * suffix is bookkeeping rather than a name anyone should live with: `button`
- * lands as `button.tsx`. A block keeps its whole id, so `dialog-sign-in.tsx`
- * still says what it is.
- */
 export function targetFileName(id: string, component: string, variant: string) {
 	return variant === "base" ? `${component}.tsx` : `${id}.tsx`;
 }
 
-/**
- * Turns the names on the command line into registry ids.
- *
- * One flat namespace: a component by its name, a block by its own id. There is
- * deliberately no way to ask for an example - the difference between
- * `autocomplete` and the "large" example of it is `size="lg"`, a prop you pass
- * rather than a second file to own and keep in sync.
- *
- * Every component is `--all`, a flag rather than a name: a bare `add all` reads
- * as though the registry contains a component called "all", and reserving the
- * word would mean the registry could never have one.
- *
- * Components only: blocks are specific compositions, and each one pulls the
- * components it is built from anyway, so including them would write every block
- * on top of every component. Name a block to get it.
- */
 export function resolveNames(
 	index: RegistryIndex,
 	names: string[],
@@ -74,8 +52,6 @@ export function resolveNames(
 ): { ids: string[] } | { unknown: string } {
 	const ids: string[] = [];
 
-	// The flag is unambiguous by construction: unlike the bare word, it cannot
-	// be mistaken for a component, so it never yields to one.
 	if (options.all) ids.push(...index.components.map((x) => x.base));
 
 	for (const name of names) {
@@ -94,7 +70,6 @@ export function resolveNames(
 		return { unknown: name };
 	}
 
-	// `all` alongside a name, or a name twice, must not write the same file twice.
 	return { ids: [...new Set(ids)] };
 }
 
@@ -106,8 +81,6 @@ export async function add(argv: string[]): Promise<number> {
 		p.log.error("No package.json found. Run this inside a project.");
 		return 1;
 	}
-	// Non-null alias: `writeTarget` below is a nested function declaration, and
-	// TS drops narrowing of outer bindings across a function boundary.
 	const root = projectRoot;
 
 	const config = readConfig(root);
@@ -117,9 +90,6 @@ export async function add(argv: string[]): Promise<number> {
 		);
 		return 1;
 	}
-	// Aliased so `writeTarget`, a nested function declaration, does not lose
-	// the null check above: TS drops narrowing of outer bindings across a
-	// function boundary.
 	const { registry, componentsDir } = config;
 
 	if (names.length === 0 && !options.all) {
@@ -146,9 +116,6 @@ export async function add(argv: string[]): Promise<number> {
 	const resolution = resolveNames(index, names, { all: options.all });
 	if ("unknown" in resolution) {
 		p.log.error(`Unknown component or block ${c.bold(resolution.unknown)}.`);
-		// The obvious first guess for "give me everything", and the registry has
-		// no component by that name to suggest, so an edit-distance list would
-		// answer a question nobody asked.
 		if (resolution.unknown === "all") {
 			p.log.info(`Every component is ${c.cyan("--all")}.`);
 		} else {
@@ -160,21 +127,8 @@ export async function add(argv: string[]): Promise<number> {
 
 	const written: string[] = [];
 	const allDeps = new Map<string, string>();
-	// An id a dependency chain has already fetched & either written or skipped,
-	// so two variants sharing a dependency - or a dependency cycle - only ever
-	// resolves once.
 	const resolved = new Set<string>();
 
-	/**
-	 * Writes one registry id, first writing whatever it declares under
-	 * `registryDependencies` so a variant demoing a migrated component always
-	 * brings that component with it.
-	 *
-	 * `promptOnConflict` is false for a dependency pulled in this way: the user
-	 * named the variant, not the component underneath it, so an existing file
-	 * there is resolved by keeping it rather than asking about a file they
-	 * never asked for.
-	 */
 	async function writeTarget(
 		id: string,
 		promptOnConflict: boolean,
@@ -296,21 +250,12 @@ export async function add(argv: string[]): Promise<number> {
 		}
 	}
 
-	// Last, so it is the line still on screen: a component that landed fine but
-	// has nothing generating its classes looks broken in a way the file list
-	// above does not explain.
 	warnStyling(root);
 
 	p.outro("Done.");
 	return 0;
 }
 
-/**
- * Substring matching alone misses the most common typo: a single wrong or
- * dropped letter, where neither string contains the other ("buton" vs
- * "button"). Edit distance catches those, and substring still catches the
- * half-remembered name ("dialog" for "alert-dialog").
- */
 export function editDistance(a: string, b: string): number {
 	let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
 	for (let i = 1; i <= a.length; i++) {
@@ -328,11 +273,6 @@ export function editDistance(a: string, b: string): number {
 	return prev[b.length] as number;
 }
 
-/**
- * Suggests across components and blocks together, since they share one
- * namespace: someone typing `dialog-signin` wants the block, and someone
- * typing `buton` wants the component.
- */
 function suggest(index: RegistryIndex, name: string): void {
 	const near = [
 		...index.components.map((x) => x.component),
@@ -342,8 +282,6 @@ function suggest(index: RegistryIndex, name: string): void {
 			name: x,
 			score: x.includes(name) || name.includes(x) ? 0 : editDistance(x, name),
 		}))
-		// Two edits is generous enough for a slip, tight enough that unrelated
-		// names do not show up as suggestions.
 		.filter((x) => x.score <= 2)
 		.sort((a, b) => a.score - b.score)
 		.slice(0, 5)

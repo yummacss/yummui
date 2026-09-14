@@ -20,7 +20,6 @@ const LOCKFILES: Record<string, PackageManager> = {
 	"package-lock.json": "npm",
 };
 
-/** The nearest directory above `from` holding a package.json. */
 export function findProjectRoot(from = process.cwd()): string | null {
 	let dir = resolve(from);
 	for (;;) {
@@ -43,7 +42,6 @@ export function detectPackageManager(root: string): PackageManager {
 	for (const [lockfile, pm] of Object.entries(LOCKFILES)) {
 		if (existsSync(join(root, lockfile))) return pm;
 	}
-	// `packageManager` is the next best signal, and it is what corepack reads.
 	const field = readPackageJson(root).packageManager;
 	if (typeof field === "string") {
 		const name = field.split("@")[0];
@@ -66,8 +64,6 @@ export function detectFramework(root: string): string | null {
 		...(pkg.devDependencies as Record<string, string> | undefined),
 	};
 	if (deps.next) {
-		// The App Router is a directory, not a dependency, so this is the only
-		// way to tell which one a Next project is using.
 		const app = ["app", "src/app"].some((d) => existsSync(join(root, d)));
 		return app ? "Next.js (App Router)" : "Next.js (Pages Router)";
 	}
@@ -77,14 +73,11 @@ export function detectFramework(root: string): string | null {
 	return null;
 }
 
-/** Reads `@/*` out of tsconfig so `init` can suggest an alias it knows works. */
 export function detectAlias(root: string): string | null {
 	for (const file of ["tsconfig.json", "jsconfig.json"]) {
 		const path = join(root, file);
 		if (!existsSync(path)) continue;
 		try {
-			// Comments are legal in tsconfig, and JSON.parse is not, so strip the
-			// obvious ones rather than pulling in a JSON5 dependency.
 			const raw = readFileSync(path, "utf8")
 				.replace(/\/\*[\s\S]*?\*\//g, "")
 				.replace(/(^|\s)\/\/.*$/gm, "$1");
@@ -93,9 +86,7 @@ export function detectAlias(root: string): string | null {
 				| Record<string, string[]>
 				| undefined;
 			if (paths?.["@/*"]) return "@";
-		} catch {
-			// An unreadable tsconfig just means no suggestion, not a failure.
-		}
+		} catch {}
 	}
 	return null;
 }
@@ -123,11 +114,6 @@ export function writeConfig(root: string, config: Config): void {
 	writeFileSync(configPath(root), `${JSON.stringify(config, null, "\t")}\n`);
 }
 
-/**
- * Which of `deps` the project does not already have, by name only. Comparing
- * ranges would mean resolving semver against a lockfile; the goal here is just
- * to avoid reinstalling something that is plainly present.
- */
 export function missingDependencies(
 	root: string,
 	deps: { name: string; version: string }[],
@@ -149,13 +135,6 @@ export function installCommand(
 	return { command: pm, args };
 }
 
-/**
- * How to invoke this CLI with the project's own package manager, for any hint
- * printed back to the user. Telling a pnpm user to run `npx` reads as not
- * knowing what project you are standing in.
- *
- * `pnpm dlx`, never `pnpx`: the latter does not exist.
- */
 export function runner(root: string | null = findProjectRoot()): string {
 	const pm = root ? detectPackageManager(root) : "npm";
 	switch (pm) {

@@ -69,7 +69,6 @@ export async function init(argv: string[]): Promise<number> {
 
 	p.log.success(`Wrote ${c.bold(configPath(root))}`);
 
-	// Cheaper to hear now than after the first component looks wrong.
 	warnStyling(root);
 
 	p.outro(`Next: ${c.cyan(`${runner(root)} add button`)}`);

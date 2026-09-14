@@ -47,7 +47,6 @@ export async function list(argv: string[]): Promise<number> {
 
 	console.log(`\n${c.bold(`${index.components.length} components`)}\n`);
 
-	// Two columns, because 36 single-file lines is a screenful of scrolling.
 	const names = index.components.map((x) => x.component);
 	for (let i = 0; i < names.length; i += 2) {
 		console.log(`  ${(names[i] ?? "").padEnd(24)}${names[i + 1] ?? ""}`);

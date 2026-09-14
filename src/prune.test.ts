@@ -14,7 +14,6 @@ import type { RegistryIndex } from "./registry";
 
 const dirs: string[] = [];
 
-/** A throwaway project directory. Each test gets its own so nothing leaks. */
 function project(files: Record<string, string>): string {
 	const dir = mkdtempSync(join(tmpdir(), "yummaui-prune-"));
 	dirs.push(dir);
@@ -68,9 +67,6 @@ describe("extractSpecifiers", () => {
 		]);
 	});
 
-	// The whole point of anchoring on the keyword: an empty literal or a stray
-	// quote cannot desync the rest of the file, which is the bug that cost the
-	// scanner in `nitro`.
 	it("is not desynced by an empty string literal", () => {
 		const found = extractSpecifiers(
 			`const a = ""; import Button from "./button";`,
@@ -108,8 +104,6 @@ describe("resolveToComponent", () => {
 		expect(resolveToComponent("react", from, shape(root))).toBeNull();
 	});
 
-	// A directory named `..something` next to the components directory must not
-	// be mistaken for an escape out of it.
 	it("does not mistake a leading-dots sibling for an escape", () => {
 		expect(
 			resolveToComponent("../components/..ui-old/x", from, shape(root)),
@@ -146,8 +140,6 @@ describe("resolveToComponent", () => {
 });
 
 describe("installableFileNames", () => {
-	// The set is derived independently of `targetFileName`, so this is what
-	// stops the two drifting.
 	it("agrees with what add would write", () => {
 		const index: RegistryIndex = {
 			components: [
@@ -182,8 +174,6 @@ describe("findUnused", () => {
 		expect(result.kept).toBe(1);
 	});
 
-	// The case the whole design exists for: `button` is imported, but only by a
-	// block nothing else reaches, so both go.
 	it("drops a block and the component only that block imports", () => {
 		const root = project({
 			"package.json": "{}",
@@ -208,8 +198,6 @@ describe("findUnused", () => {
 		expect(findUnused(shape(root), INSTALLABLE).unused).toEqual([]);
 	});
 
-	// A file `add` never wrote is not a candidate, and because it survives it
-	// has to keep whatever it imports.
 	it("never deletes the project's own file, or what that file imports", () => {
 		const root = project({
 			"package.json": "{}",
@@ -274,9 +262,6 @@ describe("findUnused", () => {
 		expect(findUnused(shape(root), INSTALLABLE).unused).toHaveLength(1);
 	});
 
-	// Build output is read rather than guessed at by directory name. If it does
-	// still name a component, that counts as a use and the file stays - which is
-	// the direction to err in.
 	it("lets a reference in build output keep a file", () => {
 		const root = project({
 			"package.json": "{}",

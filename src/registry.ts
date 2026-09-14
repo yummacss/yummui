@@ -11,12 +11,6 @@ export interface RegistryFile {
 	content: string;
 }
 
-/**
- * `component` is a props-driven unit: one file, every variation reachable
- * through props. `block` is a composition installed under its own id. An
- * `example` only demonstrates a prop, so it is never installed - the docs
- * point at its component instead, and you pass the prop.
- */
 export type RegistryKind = "component" | "block" | "example";
 
 export interface RegistryItem {
@@ -38,7 +32,6 @@ export interface RegistryComponent {
 
 export interface RegistryBlock {
 	id: string;
-	/** The component it is built from, for grouping in `list`. */
 	component: string;
 }
 
@@ -50,12 +43,6 @@ export interface RegistryIndex {
 
 export class RegistryError extends Error {}
 
-/**
- * The registry is static JSON behind a normal web server, so a miss returns
- * that server's HTML 404 page rather than JSON. Checking `ok` first is what
- * turns a typo into "component not found" instead of a parse error pointing at
- * `<!DOCTYPE`.
- */
 async function getJson<T>(url: string): Promise<T> {
 	let res: Response;
 	try {

@@ -6,7 +6,6 @@ import { CSS_CONFIG_FILE, detectStyling, missingStyling } from "./styling";
 
 const dirs: string[] = [];
 
-/** A throwaway project directory. Each test gets its own so nothing leaks. */
 function project(files: Record<string, string | object>): string {
 	const dir = mkdtempSync(join(tmpdir(), "yummaui-"));
 	dirs.push(dir);

@@ -15,7 +15,6 @@ import {
 
 const dirs: string[] = [];
 
-/** A throwaway project directory. Each test gets its own so nothing leaks. */
 function project(files: Record<string, string | object>): string {
 	const dir = mkdtempSync(join(tmpdir(), "yummaui-"));
 	dirs.push(dir);
@@ -80,7 +79,6 @@ describe("runner", () => {
 		}
 	});
 
-	// `pnpx` is not a real command. It has been written down as one before.
 	it("never emits pnpx", () => {
 		const dir = project({ "package.json": {}, "pnpm-lock.yaml": "" });
 		expect(runner(dir)).not.toContain("pnpx");
@@ -131,8 +129,6 @@ describe("detectAlias", () => {
 		expect(detectAlias(dir)).toBe("@");
 	});
 
-	// tsconfig allows comments; JSON.parse does not. This is the case that
-	// silently returned null before the stripping was added.
 	it("survives comments in tsconfig", () => {
 		const dir = project({
 			"package.json": {},

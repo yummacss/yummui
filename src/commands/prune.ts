@@ -37,8 +37,6 @@ export async function prune(argv: string[]): Promise<number> {
 
 	p.intro(c.bgCyan(c.black(" Yumma UI ")));
 
-	// The registry decides what is a candidate at all: `prune` may only delete
-	// files `add` could have written, never the project's own components.
 	let index: Awaited<ReturnType<typeof fetchIndex>>;
 	const s = p.spinner();
 	s.start("Fetching registry");
@@ -63,8 +61,6 @@ export async function prune(argv: string[]): Promise<number> {
 	const show = (path: string) => relative(root, path).replace(/\\/g, "/");
 
 	if (result.computed.length > 0) {
-		// The one thing a static read cannot answer, so it is said out loud
-		// rather than folded into the count.
 		p.log.warn(
 			`Imports built at runtime in ${result.computed.length} file${
 				result.computed.length > 1 ? "s" : ""

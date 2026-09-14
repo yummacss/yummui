@@ -14,8 +14,6 @@ function respond(body: string, init: ResponseInit = {}) {
 }
 
 describe("targetFileName", () => {
-	// A component lands under its own name; the `-base` its registry id carries
-	// is bookkeeping nobody should have to live with on disk.
 	it("drops the suffix for a component", () => {
 		expect(targetFileName("button", "button", "base")).toBe("button.tsx");
 		expect(targetFileName("alert-dialog", "alert-dialog", "base")).toBe(
@@ -23,7 +21,6 @@ describe("targetFileName", () => {
 		);
 	});
 
-	// A block keeps its whole id, so the file still says what it is.
 	it("keeps the whole id for a block", () => {
 		expect(targetFileName("dialog-sign-in", "dialog", "sign-in")).toBe(
 			"dialog-sign-in.tsx",
@@ -36,11 +33,8 @@ describe("targetFileName", () => {
 
 describe("editDistance", () => {
 	it("scores the typos that substring matching misses", () => {
-		// Neither string contains the other, which is why substring alone failed.
-		expect(editDistance("button", "buton")).toBe(1); // a dropped letter
-		expect(editDistance("accordion", "accordian")).toBe(1); // one wrong letter
-		// A transposition costs 2 under plain Levenshtein, which is still inside
-		// the threshold `suggest` uses.
+		expect(editDistance("button", "buton")).toBe(1);
+		expect(editDistance("accordion", "accordian")).toBe(1);
 		expect(editDistance("dialog", "dialgo")).toBe(2);
 	});
 
@@ -69,11 +63,6 @@ describe("registry fetching", () => {
 		);
 	});
 
-	/**
-	 * The registry is static files behind a normal web server, so a miss returns
-	 * that server's HTML 404 page. Parsing it would surface a typo as a JSON
-	 * error pointing at `<!DOCTYPE`, which tells the user nothing.
-	 */
 	it("reports a 404 as not found rather than parsing the HTML error page", async () => {
 		respond("<!DOCTYPE html><html>404</html>", { status: 404 });
 		await expect(fetchItem("http://x/ui/r", "nope")).rejects.toThrow(
@@ -168,7 +157,6 @@ describe("resolveNames with --all", () => {
 				{ component: "all", title: "All", base: "all" },
 			],
 		};
-		// The flag still means every component, and the name resolves normally.
 		expect(resolveNames(shadowed, [], { all: true })).toEqual({
 			ids: ["button", "dialog", "all"],
 		});

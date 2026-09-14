@@ -3,12 +3,6 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-/**
- * The same prose rules the docs site holds, over the only copy this repo has:
- * the strings `yummaui` prints. Written out here rather than imported, because
- * each repo owns its own copy of the rules.
- */
-
 const srcDir = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(srcDir, "..");
 
@@ -25,7 +19,6 @@ function sources(dir: string): string[] {
 	return out;
 }
 
-/** Quoted strings that read as prose: a space, lowercase letters, no code. */
 function copy(): { file: string; text: string }[] {
 	const out: { file: string; text: string }[] = [];
 
@@ -36,7 +29,6 @@ function copy(): { file: string; text: string }[] {
 		for (const match of source.matchAll(/"([^"\n]{6,})"|'([^'\n]{6,})'/g)) {
 			const text = (match[1] ?? match[2] ?? "").trim();
 			if (!/[a-z]{3}/.test(text) || !text.includes(" ")) continue;
-			// Module specifiers, globs and template fragments are not prose.
 			if (/^[\w\-./@:*\s]+$/.test(text) && !/[A-Z]/.test(text)) continue;
 			if (text.includes("${") || text.includes("||") || text.includes("==="))
 				continue;
@@ -82,13 +74,10 @@ describe("CLI copy", () => {
 		expect(offenders(/\btailwind\b/i)).toEqual([]);
 	});
 
-	// A ring is a box-shadow standing in for an outline. Yumma has `os-`, `ow-`,
-	// `oo-` and `oc-`, so the word for what focus draws is outline.
 	it("calls the focus indicator an outline", () => {
 		expect(offenders(/\brings?\b/i)).toEqual([]);
 	});
 
-	/** One ellipsis character, not three dots. `...spread` is not prose. */
 	it("spells an ellipsis as one character", () => {
 		expect(offenders(/[A-Za-z,)]\s*\.{3}(?![\w$])/)).toEqual([]);
 	});
